@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { User, Code, Mail, Github, Linkedin, ExternalLink } from 'lucide-react';
 import { useScreenSize } from '../hooks/useScreenSize';
 import { useMatrixAnimation } from '../hooks/useMatrixAnimation';
+import { getWelcomeAscii, checkIfLandscape } from '../utils/asciiArt';
 
 interface TerminalLine {
   id: number;
@@ -84,6 +85,7 @@ const Terminal = () => {
     switch (command.toLowerCase().trim()) {
       case 'help':
         const helpLine = addLine('', 'output');
+        const mobileArtHelp = screenSize === 'mobile' ? '\n  art       - Show ASCII art (landscape mode recommended)' : '';
         await typeText(`Available commands:
   help      - Show available commands
   about     - About Adiraj Kashyap
@@ -91,7 +93,26 @@ const Terminal = () => {
   projects  - Featured projects
   contact   - Contact information
   clear     - Clear terminal
-  whoami    - Current user info`);
+  whoami    - Current user info${mobileArtHelp}`);
+        break;
+
+      case 'art':
+        if (screenSize === 'mobile') {
+          const artLine = addLine('', 'output');
+          if (!checkIfLandscape()) {
+            await typeText('For best experience, please rotate your device to landscape mode.\n\nPress Enter to continue or rotate your device now...');
+            setTimeout(async () => {
+              setLines(prev => [...prev.slice(0, -1)]);
+              const newArtLine = addLine('', 'output');
+              await typeText(getWelcomeAscii('mobile'));
+            }, 2000);
+          } else {
+            await typeText(getWelcomeAscii('mobile'));
+          }
+        } else {
+          const errorLine = addLine('', 'error');
+          await typeText('ASCII art is already displayed above. This command is only available for mobile users.');
+        }
         break;
 
       case 'about':
@@ -172,15 +193,23 @@ Let's connect and build something amazing together! 🚀`);
   useEffect(() => {
     if (isComplete && !isInitialized) {
       const initTerminal = async () => {
-        const welcomeLine = addLine('', 'output');
-        await typeText(`${displayText}
+        if (screenSize === 'mobile') {
+          const welcomeLine = addLine('', 'output');
+          await typeText(`Welcome to Adiraj's Terminal Portfolio!
+
+System initialized... Type 'help' to get started.
+Type 'art' to see ASCII art in landscape mode.`, 20);
+        } else {
+          const welcomeLine = addLine('', 'output');
+          await typeText(`${displayText}
 
 System initialized... Type 'help' to get started.`, 20);
+        }
         setIsInitialized(true);
       };
       initTerminal();
     }
-  }, [isComplete, isInitialized, displayText]);
+  }, [isComplete, isInitialized, displayText, screenSize]);
 
   useEffect(() => {
     if (terminalRef.current) {
@@ -241,14 +270,14 @@ System initialized... Type 'help' to get started.`, 20);
             ref={terminalRef}
             className="h-[600px] overflow-y-auto p-4 bg-terminal-bg"
           >
-            {/* Show Matrix animation if not complete */}
-            {!isComplete && (
-              <div className="whitespace-pre text-terminal-green opacity-70 animate-pulse">
+            {/* Show ASCII art only for tablet and desktop */}
+            {!isComplete && screenSize !== 'mobile' && (
+              <div className="whitespace-pre text-terminal-green opacity-70">
                 {displayText}
               </div>
             )}
 
-            {/* Show normal terminal content when Matrix is complete */}
+            {/* Show normal terminal content when initialized */}
             {isComplete && lines.map((line) => (
               <div key={line.id} className="mb-2">
                 <div className={`whitespace-pre-wrap ${
@@ -280,19 +309,31 @@ System initialized... Type 'help' to get started.`, 20);
           </div>
         </div>
 
-        {/* Quick Actions - only show when Matrix animation is complete */}
+        {/* Quick Actions - updated for mobile */}
         {isComplete && (
           <div className="mt-6 flex flex-wrap gap-2 justify-center">
-            {['help', 'about', 'skills', 'projects', 'contact'].map((cmd) => (
-              <button
-                key={cmd}
-                onClick={() => handleCommand(cmd)}
-                disabled={isTyping}
-                className="px-3 py-1 text-xs bg-terminal-green/10 border border-terminal-green/30 rounded text-terminal-green hover:bg-terminal-green/20 transition-colors disabled:opacity-50"
-              >
-                {cmd}
-              </button>
-            ))}
+            {screenSize === 'mobile' 
+              ? ['help', 'about', 'skills', 'projects', 'contact', 'art'].map((cmd) => (
+                  <button
+                    key={cmd}
+                    onClick={() => handleCommand(cmd)}
+                    disabled={isTyping}
+                    className="px-3 py-1 text-xs bg-terminal-green/10 border border-terminal-green/30 rounded text-terminal-green hover:bg-terminal-green/20 transition-colors disabled:opacity-50"
+                  >
+                    {cmd}
+                  </button>
+                ))
+              : ['help', 'about', 'skills', 'projects', 'contact'].map((cmd) => (
+                  <button
+                    key={cmd}
+                    onClick={() => handleCommand(cmd)}
+                    disabled={isTyping}
+                    className="px-3 py-1 text-xs bg-terminal-green/10 border border-terminal-green/30 rounded text-terminal-green hover:bg-terminal-green/20 transition-colors disabled:opacity-50"
+                  >
+                    {cmd}
+                  </button>
+                ))
+            }
           </div>
         )}
       </div>
