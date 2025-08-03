@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Code, Mail, Github, Linkedin, ExternalLink } from 'lucide-react';
 import { useScreenSize } from '../hooks/useScreenSize';
-import { getWelcomeAscii } from '../utils/asciiArt';
+import { useMatrixAnimation } from '../hooks/useMatrixAnimation';
 
 interface TerminalLine {
   id: number;
@@ -14,9 +14,11 @@ const Terminal = () => {
   const [currentInput, setCurrentInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [lineCounter, setLineCounter] = useState(0);
+  const [isInitialized, setIsInitialized] = useState(false);
   const terminalRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const screenSize = useScreenSize();
+  const { displayText, isComplete } = useMatrixAnimation(screenSize);
 
   const skills = [
     'React.js', 'Next.js', 'TypeScript', 'JavaScript (ES6+)',
@@ -168,16 +170,17 @@ Let's connect and build something amazing together! 🚀`);
   };
 
   useEffect(() => {
-    const initTerminal = async () => {
-      const welcomeLine = addLine('', 'output');
-      const welcomeAscii = getWelcomeAscii(screenSize);
-      await typeText(`${welcomeAscii}
+    if (isComplete && !isInitialized) {
+      const initTerminal = async () => {
+        const welcomeLine = addLine('', 'output');
+        await typeText(`${displayText}
 
 System initialized... Type 'help' to get started.`, 20);
-    };
-
-    initTerminal();
-  }, [screenSize]);
+        setIsInitialized(true);
+      };
+      initTerminal();
+    }
+  }, [isComplete, isInitialized, displayText]);
 
   useEffect(() => {
     if (terminalRef.current) {
@@ -238,7 +241,15 @@ System initialized... Type 'help' to get started.`, 20);
             ref={terminalRef}
             className="h-[600px] overflow-y-auto p-4 bg-terminal-bg"
           >
-            {lines.map((line) => (
+            {/* Show Matrix animation if not complete */}
+            {!isComplete && (
+              <div className="whitespace-pre text-terminal-green opacity-70 animate-pulse">
+                {displayText}
+              </div>
+            )}
+
+            {/* Show normal terminal content when Matrix is complete */}
+            {isComplete && lines.map((line) => (
               <div key={line.id} className="mb-2">
                 <div className={`whitespace-pre-wrap ${
                   line.type === 'input' ? 'text-terminal-blue' : 
@@ -249,37 +260,41 @@ System initialized... Type 'help' to get started.`, 20);
               </div>
             ))}
             
-            {/* Input Line */}
-            <form onSubmit={handleSubmit} className="flex items-center mt-4">
-              <span className="text-terminal-blue mr-2">adiraj@portfolio:~$</span>
-              <input
-                ref={inputRef}
-                type="text"
-                value={currentInput}
-                onChange={(e) => setCurrentInput(e.target.value)}
-                disabled={isTyping}
-                className="flex-1 bg-transparent text-terminal-green outline-none caret-terminal-green"
-                autoComplete="off"
-                spellCheck="false"
-              />
-              <span className="animate-blink text-terminal-green">█</span>
-            </form>
+            {/* Input Line - only show when Matrix animation is complete */}
+            {isComplete && (
+              <form onSubmit={handleSubmit} className="flex items-center mt-4">
+                <span className="text-terminal-blue mr-2">adiraj@portfolio:~$</span>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={currentInput}
+                  onChange={(e) => setCurrentInput(e.target.value)}
+                  disabled={isTyping}
+                  className="flex-1 bg-transparent text-terminal-green outline-none caret-terminal-green"
+                  autoComplete="off"
+                  spellCheck="false"
+                />
+                <span className="animate-blink text-terminal-green">█</span>
+              </form>
+            )}
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="mt-6 flex flex-wrap gap-2 justify-center">
-          {['help', 'about', 'skills', 'projects', 'contact'].map((cmd) => (
-            <button
-              key={cmd}
-              onClick={() => handleCommand(cmd)}
-              disabled={isTyping}
-              className="px-3 py-1 text-xs bg-terminal-green/10 border border-terminal-green/30 rounded text-terminal-green hover:bg-terminal-green/20 transition-colors disabled:opacity-50"
-            >
-              {cmd}
-            </button>
-          ))}
-        </div>
+        {/* Quick Actions - only show when Matrix animation is complete */}
+        {isComplete && (
+          <div className="mt-6 flex flex-wrap gap-2 justify-center">
+            {['help', 'about', 'skills', 'projects', 'contact'].map((cmd) => (
+              <button
+                key={cmd}
+                onClick={() => handleCommand(cmd)}
+                disabled={isTyping}
+                className="px-3 py-1 text-xs bg-terminal-green/10 border border-terminal-green/30 rounded text-terminal-green hover:bg-terminal-green/20 transition-colors disabled:opacity-50"
+              >
+                {cmd}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
