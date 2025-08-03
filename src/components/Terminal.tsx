@@ -1,6 +1,7 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Code, Mail, Github, Linkedin, ExternalLink } from 'lucide-react';
+import { useScreenSize } from '../hooks/useScreenSize';
+import { getWelcomeAscii } from '../utils/asciiArt';
 
 interface TerminalLine {
   id: number;
@@ -15,6 +16,7 @@ const Terminal = () => {
   const [lineCounter, setLineCounter] = useState(0);
   const terminalRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const screenSize = useScreenSize();
 
   const skills = [
     'React.js', 'Next.js', 'TypeScript', 'JavaScript (ES6+)',
@@ -168,26 +170,14 @@ Let's connect and build something amazing together! 🚀`);
   useEffect(() => {
     const initTerminal = async () => {
       const welcomeLine = addLine('', 'output');
-      await typeText(`
-╔════════════════════════════════════════════════════════════╗
-║                    WELCOME TO THE MATRIX                   ║
-║                                                            ║
-║     █████╗ ██████╗ ██╗██████╗  █████╗      ██╗            ║
-║    ██╔══██╗██╔══██╗██║██╔══██╗██╔══██╗     ██║            ║
-║    ███████║██║  ██║██║██████╔╝███████║     ██║            ║
-║    ██╔══██║██║  ██║██║██╔══██╗██╔══██║██   ██║            ║
-║    ██║  ██║██████╔╝██║██║  ██║██║  ██║╚█████╔╝            ║
-║    ╚═╝  ╚═╝╚═════╝ ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚════╝             ║
-║                                                            ║
-║              KASHYAP - Frontend Developer                  ║
-║                                                            ║
-╚════════════════════════════════════════════════════════════╝
+      const welcomeAscii = getWelcomeAscii(screenSize);
+      await typeText(`${welcomeAscii}
 
 System initialized... Type 'help' to get started.`, 20);
     };
 
     initTerminal();
-  }, []);
+  }, [screenSize]);
 
   useEffect(() => {
     if (terminalRef.current) {
