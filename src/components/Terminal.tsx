@@ -26,6 +26,16 @@ const Terminal = () => {
 
   const projects = [
     {
+      name: 'BTD Union: The Elite Squad',
+      tech: 'Vite, TypeScript, Tailwind CSS, React, shadcn/ui',
+      description: 'A concept site for Bloons Tower Defense Union, showcasing dynamic UI design and smooth transitions'
+    },
+    {
+      name: 'GTA-6 Demo App',
+      tech: 'Vite, TypeScript, Tailwind CSS, React, shadcn/ui',
+      description: 'GTA 6 Demo Page – A sleek and interactive concept demo built with modern web technologies'
+    },
+    {
       name: 'Modern Dashboard',
       tech: 'React, TypeScript, Tailwind',
       description: 'Responsive admin dashboard with real-time data visualization'
